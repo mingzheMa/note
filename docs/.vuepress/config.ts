@@ -53,7 +53,13 @@ export default defineUserConfig({
       "/react/": "structure",
       "/redux/": "structure",
       "/vue2源码/": "structure",
-      "/vue3源码/": "structure",
+      "/vue3源码/": [
+        "",
+        "1.vnode到dom",
+        "2.diff流程",
+        "3.setup",
+        "4.响应式",
+      ],
       "/vue-router3源码/": [
         "",
         "1.install",
