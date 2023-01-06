@@ -61,6 +61,7 @@ export default defineUserConfig({
         "4.响应式",
         "5.计算属性",
         "6.监听器",
+        "7.异步队列",
         "100.项目构建",
       ],
       "/vue-router3源码/": [
