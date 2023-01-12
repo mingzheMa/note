@@ -115,6 +115,7 @@ export default defineUserConfig({
         "5.计算属性",
         "6.监听器",
         "7.异步队列",
+        "8.生命周期钩子",
         "100.项目构建",
       ],
       "/vue-router3源码/": [
