@@ -21,6 +21,10 @@ export default defineUserConfig({
         link: "/webpack/README.md",
       },
       {
+        text: "vite",
+        link: "/vite/README.md",
+      },
+      {
         text: "react",
         link: "/react/README.md",
       },
@@ -50,6 +54,7 @@ export default defineUserConfig({
       "/JS/": "structure",
       "/TS/": "structure",
       "/webpack/": "structure",
+      "/vite/": "structure",
       "/react/": "structure",
       "/redux/": "structure",
       "/vue2源码/": [
@@ -116,6 +121,7 @@ export default defineUserConfig({
         "6.监听器",
         "7.异步队列",
         "8.生命周期钩子",
+        "9.依赖注入",
         "100.项目构建",
       ],
       "/vue-router3源码/": [
