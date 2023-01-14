@@ -54,7 +54,7 @@ export default defineUserConfig({
       "/JS/": "structure",
       "/TS/": "structure",
       "/webpack/": "structure",
-      "/vite/": "structure",
+      "/vite/": ["", "1.项目构建", "2.css工程化"],
       "/react/": "structure",
       "/redux/": "structure",
       "/vue2源码/": [
