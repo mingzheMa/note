@@ -48,13 +48,17 @@ export default defineUserConfig({
         text: "网络",
         link: "/网络/README.md",
       },
+      {
+        text: "面试题",
+        link: "/面试题/README.md",
+      },
     ],
 
     sidebar: {
       "/JS/": "structure",
       "/TS/": "structure",
       "/webpack/": "structure",
-      "/vite/": ["", "1.项目构建", "2.css工程化"],
+      "/vite/": ["", "1.项目构建", "2.css工程化", "3.接入ESLint"],
       "/react/": "structure",
       "/redux/": "structure",
       "/vue2源码/": [
@@ -122,6 +126,7 @@ export default defineUserConfig({
         "7.异步队列",
         "8.生命周期钩子",
         "9.依赖注入",
+        "10.构建AST流程",
         "100.项目构建",
       ],
       "/vue-router3源码/": [
@@ -146,6 +151,7 @@ export default defineUserConfig({
         },
       ],
       "/网络/": "structure",
+      "/面试题/": "structure",
     },
   }),
 });
