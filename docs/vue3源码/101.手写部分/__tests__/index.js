@@ -121,28 +121,47 @@ function watch(source, callback, options = {}) {
         }
 
         if (options.deep) {
-            traverse(watchData)
+            traverse(watchData);
         }
 
         return watchData;
     }
 
-    effect(watchEffect, {
-        scheduler(effect) {
-            oldValue = newValue;
-            newValue = effect();
-            callback(newValue, oldValue);
+    // 触发回调任务
+    function job() {
+        oldValue = newValue;
+        newValue = effectFn();
+        callback(newValue, oldValue);
+    }
+
+    const effectFn = effect(watchEffect, {
+        lazy: true,
+        scheduler() {
+            if (options.flush) {
+                Promise.resolve().then(job);
+            } else {
+                job();
+            }
         }
     });
+
+    if (options.immediate) {
+        // 触发回调
+        job();
+    } else {
+        // 首次手动调用收集依赖
+        effectFn();
+    }
 }
 
 // 递归获取对象每一个属性
-function traverse(node) {
+function traverse(node, seen = new Set()) {
     const type = Object.prototype.toString.call(node);
 
-    if (['[object Array]', '[object Object]'].includes(type)) {
+    if (['[object Array]', '[object Object]'].includes(type) && !seen.has(node)) {
+        seen.add(node);
         for (const key in node) {
-            traverse(node[key]);
+            traverse(node[key], seen);
         }
     }
 }
@@ -201,15 +220,19 @@ const proxyObj = new Proxy(rawObj, {
 });
 
 watch(
-    () => proxyObj.obj,
+    () => proxyObj.num,
     (newValue, oldValue) => {
-        console.log('proxyObj.obj更新了', oldValue, newValue);
+        console.log('proxyObj.num更新了', oldValue, newValue);
     },
     {
-        deep: true
+        deep: true,
+        immediate: true,
+        flush: 'post'
     }
 );
 
-proxyObj.obj.num++;
-proxyObj.obj.num++;
-proxyObj.obj.num++;
+proxyObj.num++;
+proxyObj.num++;
+proxyObj.num++;
+
+console.log("主线程")
