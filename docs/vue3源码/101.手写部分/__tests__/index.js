@@ -108,6 +108,8 @@ function computed(getter) {
 function watch(source, callback, options = {}) {
     let oldValue = null;
     let newValue = null;
+    // 清除监听函数
+    let cleanup = null
 
     // 监听副作用函数
     function watchEffect() {
@@ -129,15 +131,17 @@ function watch(source, callback, options = {}) {
 
     // 触发回调任务
     function job() {
+        // 清除函数有值则调用清除函数
+        cleanup && cleanup();
         oldValue = newValue;
         newValue = effectFn();
-        callback(newValue, oldValue);
+        callback(newValue, oldValue, fn => cleanup = fn);
     }
 
     const effectFn = effect(watchEffect, {
         lazy: true,
         scheduler() {
-            if (options.flush) {
+            if (options.flush === 'post') {
                 Promise.resolve().then(job);
             } else {
                 job();
@@ -221,18 +225,23 @@ const proxyObj = new Proxy(rawObj, {
 
 watch(
     () => proxyObj.num,
-    (newValue, oldValue) => {
-        console.log('proxyObj.num更新了', oldValue, newValue);
+    (newValue, oldValue, onInvalidate) => {
+        let expired = false
+        onInvalidate(() => {
+            expired = true
+        })
+
+        // 模拟异步接口请求3s-5s打印
+        setTimeout(() => {
+            !expired && console.log('proxyObj.num更新了', oldValue, newValue);
+        }, Math.random() * 3000 + 2000);
     },
     {
-        deep: true,
-        immediate: true,
-        flush: 'post'
+        // deep: true,
+        // immediate: true,
+        // flush: 'post'
     }
 );
 
 proxyObj.num++;
 proxyObj.num++;
-proxyObj.num++;
-
-console.log("主线程")
