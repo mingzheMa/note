@@ -126,9 +126,16 @@ export default defineUserConfig({
         "7.异步队列",
         "8.生命周期钩子",
         "9.依赖注入",
-        "10.构建AST流程",
         "100.项目构建",
-        "101.手写部分",
+        {
+          text:"手写部分",
+          link: "/vue3源码/101.手写部分/响应式",
+          collapsible: true,
+          prefix: "101.手写部分",
+          children: [
+            "响应式",
+          ],
+        },
       ],
       "/vue-router3源码/": [
         "",
