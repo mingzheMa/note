@@ -6,6 +6,8 @@ export default defineUserConfig({
   title: "marx的学习笔记",
   description: "部分内容是参考外部文章，属于个人复习使用",
 
+  base: "/note/",
+
   theme: hopeTheme({
     navbar: [
       {

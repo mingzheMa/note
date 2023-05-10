@@ -200,21 +200,65 @@ function flushJob() {
 }
 
 // ___测试代码___
+// const rawObj = {
+//     text: 'hellow',
+//     boolean: true,
+//     num: 0,
+//     obj: {
+//         num: 0,
+//         boolean: true,
+//         string: 'string'
+//     }
+// };
+
+// const proxyObj = new Proxy(rawObj, {
+//     get(target, key) {
+//         track(target, key);
+//         return target[key];
+//     },
+//     set(target, key, newValue) {
+//         target[key] = newValue;
+//         trigger(target, key);
+//         return true;
+//     }
+// });
+
+// watch(
+//     () => proxyObj.num,
+//     (newValue, oldValue, onInvalidate) => {
+//         let expired = false
+//         onInvalidate(() => {
+//             expired = true
+//         })
+
+//         // 模拟异步接口请求3s-5s打印
+//         setTimeout(() => {
+//             !expired && console.log('proxyObj.num更新了', oldValue, newValue);
+//         }, Math.random() * 3000 + 2000);
+//     },
+//     {
+//         // deep: true,
+//         // immediate: true,
+//         // flush: 'post'
+//     }
+// );
+
+// proxyObj.num++;
+// proxyObj.num++;
+
+
+// 测试Reflect
 const rawObj = {
-    text: 'hellow',
-    boolean: true,
-    num: 0,
-    obj: {
-        num: 0,
-        boolean: true,
-        string: 'string'
-    }
+    get foo() {
+        return this.bar;
+    },
+    bar: 1
 };
 
 const proxyObj = new Proxy(rawObj, {
-    get(target, key) {
+    get(target, key, receiver) {
         track(target, key);
-        return target[key];
+        return Reflect.get(target, key, receiver);
     },
     set(target, key, newValue) {
         target[key] = newValue;
@@ -223,25 +267,11 @@ const proxyObj = new Proxy(rawObj, {
     }
 });
 
-watch(
-    () => proxyObj.num,
-    (newValue, oldValue, onInvalidate) => {
-        let expired = false
-        onInvalidate(() => {
-            expired = true
-        })
 
-        // 模拟异步接口请求3s-5s打印
-        setTimeout(() => {
-            !expired && console.log('proxyObj.num更新了', oldValue, newValue);
-        }, Math.random() * 3000 + 2000);
-    },
-    {
-        // deep: true,
-        // immediate: true,
-        // flush: 'post'
-    }
-);
+effect(() => {
+    console.log(proxyObj.foo)
+})
 
-proxyObj.num++;
-proxyObj.num++;
+proxyObj.bar++
+proxyObj.bar++
+proxyObj.bar++
