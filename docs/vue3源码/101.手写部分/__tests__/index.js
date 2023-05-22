@@ -4,6 +4,9 @@ const bucket = new WeakMap();
 // 正在执行的副作用栈
 const effectStack = [];
 
+// 迭代器的key，用于依赖收集
+const ITERATE_KEY = Symbol('ITERATE_KEY');
+
 // 将副作用函数添加到桶中
 function track(target, key) {
     // 如果没有当前副作用则返回
@@ -27,8 +30,22 @@ function track(target, key) {
 }
 
 // 将桶中的副作用取出来执行
-function trigger(target, key) {
-    const effects = bucket.get(target).get(key);
+function trigger(target, key, type) {
+    // 副作用队列
+    const effects = new Set();
+
+    const targetMap = bucket.get(target);
+
+    // 将依赖key的副作用加入队列
+    targetMap.has(key) && targetMap.get(key).forEach(effect => effects.add(effect));
+
+    // 将迭代器key的副作用加入队列
+    if (type === 'ADD' || type === 'DELETE') {
+        // 只有在增加的时候才需要触发遍历相关副作用
+        targetMap.has(ITERATE_KEY) && targetMap.get(ITERATE_KEY).forEach(effect => effects.add(effect));
+    }
+
+    // 赋值一个新的Set进行遍历，不然forEach会无限循环
     new Set(effects).forEach(effect => {
         // 如果即将执行的副作用为当前副作用，则跳过
         if (effect === effectStack[effectStack.length - 1]) return;
@@ -109,7 +126,7 @@ function watch(source, callback, options = {}) {
     let oldValue = null;
     let newValue = null;
     // 清除监听函数
-    let cleanup = null
+    let cleanup = null;
 
     // 监听副作用函数
     function watchEffect() {
@@ -135,7 +152,7 @@ function watch(source, callback, options = {}) {
         cleanup && cleanup();
         oldValue = newValue;
         newValue = effectFn();
-        callback(newValue, oldValue, fn => cleanup = fn);
+        callback(newValue, oldValue, fn => (cleanup = fn));
     }
 
     const effectFn = effect(watchEffect, {
@@ -246,7 +263,6 @@ function flushJob() {
 // proxyObj.num++;
 // proxyObj.num++;
 
-
 // 测试Reflect
 const rawObj = {
     get foo() {
@@ -261,17 +277,43 @@ const proxyObj = new Proxy(rawObj, {
         return Reflect.get(target, key, receiver);
     },
     set(target, key, newValue) {
+        // 是否存在该属性
+        const hasKey = target.hasOwnProperty(key);
         target[key] = newValue;
-        trigger(target, key);
+        trigger(target, key, hasKey ? 'SET' : 'ADD');
         return true;
+    },
+    has(target, key) {
+        track(target, key);
+        return Reflect.has(target, key);
+    },
+    ownKeys(target) {
+        track(target, ITERATE_KEY);
+        return Reflect.ownKeys(target);
+    },
+    deleteProperty(target, key) {
+        // 是否存在该属性
+        const hasKey = target.hasOwnProperty(key);
+        const res = hasKey && Reflect.deleteProperty(target, key);
+        // 删除成功在触发副作用
+        if (res) {
+            trigger(target, key, 'DELETE');
+        }
+        return res;
     }
 });
 
-
 effect(() => {
-    console.log(proxyObj.foo)
-})
+    console.log('开始遍历');
+    for (const key in proxyObj) {
+        console.log(key, proxyObj[key]);
+    }
+    console.log('结束遍历');
+});
 
-proxyObj.bar++
-proxyObj.bar++
-proxyObj.bar++
+// proxyObj.a = 1;
+// proxyObj.b = 2;
+// proxyObj.bar++;
+
+delete proxyObj.bar;
+delete proxyObj.bar;
