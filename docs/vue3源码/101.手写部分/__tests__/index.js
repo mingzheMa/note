@@ -216,6 +216,62 @@ function flushJob() {
     });
 }
 
+// 响应式数据
+const raw = Symbol('raw');
+function reactive(obj) {
+    return new Proxy(obj, {
+        get(target, key, receiver) {
+            // 获取原生数据
+            if (key === raw) {
+                return target;
+            }
+
+            track(target, key);
+
+            return Reflect.get(target, key, receiver);
+        },
+        set(target, key, newValue, receiver) {
+            // 是否存在该属性
+            const hasKey = target.hasOwnProperty(key);
+            // 获取旧值
+            const oldValue = target[key];
+            // 赋值新值
+            const res = Reflect.set(target, key, newValue, receiver);
+
+            // 如果新旧值都为NaN，或者新旧值相等则不执行副作用
+            if ((isNaN(oldValue) && isNaN(newValue)) || oldValue === newValue) {
+                return res;
+            }
+
+            // 如果触发set的函数不是原数据的代理则不执行副作用（例如原型继承）
+            if (receiver[raw] !== target) {
+                return res;
+            }
+
+            trigger(target, key, hasKey ? 'SET' : 'ADD');
+            return res;
+        },
+        has(target, key) {
+            track(target, key);
+            return Reflect.has(target, key);
+        },
+        ownKeys(target) {
+            track(target, ITERATE_KEY);
+            return Reflect.ownKeys(target);
+        },
+        deleteProperty(target, key) {
+            // 是否存在该属性
+            const hasKey = target.hasOwnProperty(key);
+            const res = hasKey && Reflect.deleteProperty(target, key);
+            // 删除成功在触发副作用
+            if (res) {
+                trigger(target, key, 'DELETE');
+            }
+            return res;
+        }
+    });
+}
+
 // ___测试代码___
 // const rawObj = {
 //     text: 'hellow',
@@ -264,56 +320,53 @@ function flushJob() {
 // proxyObj.num++;
 
 // 测试Reflect
-const rawObj = {
-    get foo() {
-        return this.bar;
-    },
-    bar: 1
-};
+// const rawObj = {
+//     get foo() {
+//         return this.bar;
+//     },
+//     bar: 1
+// };
 
-const proxyObj = new Proxy(rawObj, {
-    get(target, key, receiver) {
-        track(target, key);
-        return Reflect.get(target, key, receiver);
-    },
-    set(target, key, newValue) {
-        // 是否存在该属性
-        const hasKey = target.hasOwnProperty(key);
-        target[key] = newValue;
-        trigger(target, key, hasKey ? 'SET' : 'ADD');
-        return true;
-    },
-    has(target, key) {
-        track(target, key);
-        return Reflect.has(target, key);
-    },
-    ownKeys(target) {
-        track(target, ITERATE_KEY);
-        return Reflect.ownKeys(target);
-    },
-    deleteProperty(target, key) {
-        // 是否存在该属性
-        const hasKey = target.hasOwnProperty(key);
-        const res = hasKey && Reflect.deleteProperty(target, key);
-        // 删除成功在触发副作用
-        if (res) {
-            trigger(target, key, 'DELETE');
-        }
-        return res;
+// const proxyObj = reactive(rawObj);
+
+// effect(() => {
+//     console.log('开始遍历');
+//     for (const key in proxyObj) {
+//         console.log(key, proxyObj[key]);
+//     }
+//     console.log('结束遍历');
+// });
+
+// // proxyObj.a = 1;
+// // proxyObj.b = 2;
+// // proxyObj.bar++;
+
+// delete proxyObj.bar;
+// delete proxyObj.bar;
+
+// 测试继承
+// const parentObj = { bar: 1 };
+// const childObj = {};
+
+// const parent = reactive(parentObj);
+// const child = reactive(childObj);
+
+// Object.setPrototypeOf(child, parent);
+
+// effect(() => {
+//     console.log(child.bar);
+// });
+
+// child.bar = 2;
+
+const obj = reactive({
+    a: {
+        b: 1
     }
 });
 
 effect(() => {
-    console.log('开始遍历');
-    for (const key in proxyObj) {
-        console.log(key, proxyObj[key]);
-    }
-    console.log('结束遍历');
+    console.log(obj.a.b);
 });
 
-// proxyObj.a = 1;
-// proxyObj.b = 2;
-// proxyObj.bar++;
-
-delete proxyObj.bar;
-delete proxyObj.bar;
+obj.a.b++;
