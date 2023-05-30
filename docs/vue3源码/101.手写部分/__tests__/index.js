@@ -218,7 +218,12 @@ function flushJob() {
 
 // 响应式数据
 const raw = Symbol('raw');
-function reactive(obj) {
+function createReactive(
+    obj,
+    options = {
+        shallow: false
+    }
+) {
     return new Proxy(obj, {
         get(target, key, receiver) {
             // 获取原生数据
@@ -228,7 +233,16 @@ function reactive(obj) {
 
             track(target, key);
 
-            return Reflect.get(target, key, receiver);
+            const res = Reflect.get(target, key, receiver);
+
+            // 返回值
+            if (typeof res === 'object' && !options.shallow) {
+                // 如果值是对象/数组 并且 设置了深响应，则返回响应式数据
+                return createReactive(res, options);
+            } else {
+                // 否则返回值
+                return res;
+            }
         },
         set(target, key, newValue, receiver) {
             // 是否存在该属性
@@ -269,6 +283,18 @@ function reactive(obj) {
             }
             return res;
         }
+    });
+}
+
+// 响应式
+function reactive(obj) {
+    return createReactive(obj);
+}
+
+// 浅响应
+function shallowReactive(obj) {
+    return createReactive(obj, {
+        shallow: true
     });
 }
 
