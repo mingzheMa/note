@@ -16,7 +16,10 @@ function createReactive(
                 return target;
             }
 
-            track(target, key);
+            // 非只读数据才能收集副作用
+            if (!options.readonly) {
+                track(target, key);
+            }
 
             const res = Reflect.get(target, key, receiver);
 
@@ -68,7 +71,7 @@ function createReactive(
             if (options.readonly) {
                 throw new Error(`${key}为只读属性`);
             }
-            
+
             // 是否存在该属性
             const hasKey = target.hasOwnProperty(key);
             const res = hasKey && Reflect.deleteProperty(target, key);
