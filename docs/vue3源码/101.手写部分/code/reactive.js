@@ -64,6 +64,11 @@ function createReactive(
             return Reflect.ownKeys(target);
         },
         deleteProperty(target, key) {
+            // options.readonly判断是否为只读
+            if (options.readonly) {
+                throw new Error(`${key}为只读属性`);
+            }
+            
             // 是否存在该属性
             const hasKey = target.hasOwnProperty(key);
             const res = hasKey && Reflect.deleteProperty(target, key);
