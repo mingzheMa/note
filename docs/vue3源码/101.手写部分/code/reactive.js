@@ -40,6 +40,16 @@ function createReactive(
 
             // 是否存在该属性
             const hasKey = target.hasOwnProperty(key);
+
+            // trigger类型
+            let type = hasKey ? 'SET' : 'ADD';
+
+            // 如果是数组需要根据长度判断类型
+            if (Array.isArray(target) && key !== 'length') {
+                // 当索引大于等于length时，length会改变，因此判断为ADD
+                type = target.length <= key ? 'ADD' : 'SET';
+            }
+
             // 获取旧值
             const oldValue = target[key];
             // 赋值新值
@@ -55,7 +65,7 @@ function createReactive(
                 return res;
             }
 
-            trigger(target, key, hasKey ? 'SET' : 'ADD');
+            trigger(target, key, type, newValue);
             return res;
         },
         has(target, key) {

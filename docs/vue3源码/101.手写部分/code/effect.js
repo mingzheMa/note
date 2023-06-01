@@ -30,19 +30,36 @@ function track(target, key) {
 }
 
 // 将桶中的副作用取出来执行
-function trigger(target, key, type) {
+function trigger(target, key, type, newValue) {
     // 副作用队列
     const effects = new Set();
 
     const targetMap = bucket.get(target);
 
     // 将依赖key的副作用加入队列
-    targetMap.has(key) && targetMap.get(key).forEach(effect => effects.add(effect));
+    targetMap.has(key) && effects.add(...targetMap.get(key));
 
     // 将迭代器key的副作用加入队列
     if (type === 'ADD' || type === 'DELETE') {
         // 只有在增加的时候才需要触发遍历相关副作用
-        targetMap.has(ITERATE_KEY) && targetMap.get(ITERATE_KEY).forEach(effect => effects.add(effect));
+        targetMap.has(ITERATE_KEY) && effects.add(...targetMap.get(ITERATE_KEY));
+    }
+
+    // 当数组length属性更新时需要特殊处理
+    if (Array.isArray(target)) {
+        if (key === 'length') {
+            // 将数组的所有key以及对应的副作用取出，当key大于更新后的length则认为需要更新这个key的副作用
+            targetMap.forEach((targetEffects, key) => {
+                if (key >= newValue) {
+                    effects.add(...targetEffects);
+                }
+            });
+        } else {
+            // 如果是数组数据且通过修改索引修改时，如果是ADD判断索引大于当前数组length，因此需要触发length相关副作用
+            if (type === 'ADD') {
+                targetMap.has('length') && effects.add(...targetMap.get('length'));
+            }
+        }
     }
 
     // 赋值一个新的Set进行遍历，不然forEach会无限循环
@@ -66,7 +83,6 @@ function cleanup(effect) {
         effects.delete(effect);
     });
 }
-
 
 // 保存副作用函数并执行
 function effect(fn, options = {}) {
