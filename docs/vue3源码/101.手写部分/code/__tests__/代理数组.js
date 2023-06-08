@@ -20,8 +20,30 @@ const arr = reactive([1, 2, 3]);
 
 // arr.length = 2;
 
+// effect(() => {
+//     console.log(arr.length);
+// });
+
+// arr[3] = 4;
+
+// effect(() => {
+//     for (const key in arr) {
+//         console.log(key);
+//     }
+// });
+
+// arr[3] = 4;
+
 effect(() => {
-    console.log(arr.length);
+    for (const key of arr) {
+        console.log(key);
+    }
+});
+
+arr[3] = 4;
+
+effect(() => {
+    arr.forEach(console.log);
 });
 
 arr[3] = 4;

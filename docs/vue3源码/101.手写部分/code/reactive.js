@@ -1,4 +1,4 @@
-const { track, trigger } = require('./effect');
+const { track, trigger, ITERATE_KEY } = require('./effect');
 
 // 响应式数据
 const raw = Symbol('raw');
@@ -16,8 +16,8 @@ function createReactive(
                 return target;
             }
 
-            // 非只读数据才能收集副作用
-            if (!options.readonly) {
+            // 只读数据、forEach、Symbol.iterator属性不需要收集副作用
+            if (!options.readonly && key !== 'forEach' && key !== Symbol.iterator) {
                 track(target, key);
             }
 

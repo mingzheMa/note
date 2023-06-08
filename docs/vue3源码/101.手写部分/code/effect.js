@@ -116,3 +116,4 @@ function effect(fn, options = {}) {
 module.exports.track = track;
 module.exports.trigger = trigger;
 module.exports.effect = effect;
+module.exports.ITERATE_KEY = ITERATE_KEY;
