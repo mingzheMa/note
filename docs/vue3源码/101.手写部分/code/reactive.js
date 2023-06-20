@@ -1,5 +1,25 @@
 const { track, trigger, ITERATE_KEY } = require('./effect');
 
+// 数组原生includes方法
+const rawIncludes = Array.prototype.includes;
+// 重写includes方法
+function includes(...args) {
+    // 先从代理数据上使用includes反复噶
+    let res = rawIncludes.apply(this, args);
+
+    // 如果代理数据中没有找到该方法，则在原始数据中再查找
+    if (!res) {
+        res = rawIncludes.apply(this[raw], args);
+    }
+
+    return res;
+}
+
+// 数组方法重写
+const arrayPrototypeMounteds = {
+    includes
+};
+
 // 响应式数据
 const raw = Symbol('raw');
 function createReactive(
@@ -16,6 +36,11 @@ function createReactive(
                 return target;
             }
 
+            // 访问某些数组方法
+            if (Array.isArray(target) && arrayPrototypeMounteds.hasOwnProperty(key)) {
+                return Reflect.get(arrayPrototypeMounteds, key, receiver);
+            }
+
             // 只读数据、forEach、Symbol.iterator属性不需要收集副作用
             if (!options.readonly && key !== 'forEach' && key !== Symbol.iterator) {
                 track(target, key);
@@ -26,7 +51,7 @@ function createReactive(
             // 返回值
             if (typeof res === 'object' && !options.shallow) {
                 // 如果值是对象/数组 并且 设置了深响应，则返回响应式数据
-                return createReactive(res, options);
+                return reactive(res);
             } else {
                 // 否则返回值
                 return res;
@@ -94,9 +119,20 @@ function createReactive(
     });
 }
 
+// 原始数据与响应式数据映射表
+const reactiveMap = new Map();
+
 // 响应式
 function reactive(obj) {
-    return createReactive(obj);
+    if (reactiveMap.has(obj)) {
+        return reactiveMap.get(obj);
+    }
+
+    const res = createReactive(obj);
+
+    reactiveMap.set(obj, res);
+
+    return res;
 }
 
 // 浅响应

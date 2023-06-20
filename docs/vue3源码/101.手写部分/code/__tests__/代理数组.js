@@ -1,6 +1,6 @@
 const { reactive, effect } = require('../index');
 
-const arr = reactive([1, 2, 3]);
+const arr = reactive([]);
 
 // effect(() => {
 //     console.log(arr[0]);
@@ -34,16 +34,47 @@ const arr = reactive([1, 2, 3]);
 
 // arr[3] = 4;
 
-effect(() => {
-    for (const key of arr) {
-        console.log(key);
-    }
-});
+// effect(() => {
+//     for (const key of arr) {
+//         console.log(key);
+//     }
+// });
 
-arr[3] = 4;
+// arr[3] = 4;
 
-effect(() => {
-    arr.forEach(console.log);
-});
+// effect(() => {
+//     arr.forEach(console.log);
+// });
 
-arr[3] = 4;
+// arr[3] = 4;
+
+// (function () {
+//     const arr = reactive([{}]);
+
+//     effect(() => {
+//         console.log(arr.includes(arr[0]));
+//     });
+
+//     arr[0] = 1
+// })();
+
+(function () {
+    const obj = {}
+    const arr = reactive([obj]);
+
+    effect(() => {
+        console.log(arr.includes(obj));
+    });
+})();
+
+// (function () {
+//     effect(() => {
+//         arr.push(1);
+//         console.log('effect1', arr);
+//     });
+
+//     effect(() => {
+//         arr.push(2);
+//         console.log('effect2', arr);
+//     });
+// })();
