@@ -58,23 +58,45 @@ const arr = reactive([]);
 //     arr[0] = 1
 // })();
 
-(function () {
-    const obj = {}
-    const arr = reactive([obj]);
-
-    effect(() => {
-        console.log(arr.includes(obj));
-    });
-})();
-
 // (function () {
-//     effect(() => {
-//         arr.push(1);
-//         console.log('effect1', arr);
-//     });
+//     const obj = {}
+//     const arr = reactive([obj]);
 
 //     effect(() => {
-//         arr.push(2);
-//         console.log('effect2', arr);
+//         console.log(arr.includes(obj));
 //     });
 // })();
+
+// (function () {
+//     const obj = {}
+//     const arr = reactive([obj]);
+
+//     effect(() => {
+//         console.log(arr.indexOf(123));
+//         console.log(arr.indexOf(arr[0]));
+//         console.log(arr.indexOf(obj));
+//     });
+// })();
+
+// (function () {
+//     const obj = {};
+//     const arr = reactive([obj]);
+
+//     effect(() => {
+//         console.log(arr.lastIndexOf(123));
+//         console.log(arr.lastIndexOf(arr[0]));
+//         console.log(arr.lastIndexOf(obj));
+//     });
+// })();
+
+(function () {
+    effect(() => {
+        arr.push(1);
+        console.log('effect1', arr);
+    });
+
+    effect(() => {
+        arr.push(2);
+        console.log('effect2', arr);
+    });
+})();

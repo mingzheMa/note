@@ -33,8 +33,9 @@ function track(target, key) {
 function trigger(target, key, type, newValue) {
     // 副作用队列
     const effects = new Set();
-
     const targetMap = bucket.get(target);
+
+    if (!targetMap) return;
 
     // 将依赖key的副作用加入队列
     targetMap.has(key) && effects.add(...targetMap.get(key));

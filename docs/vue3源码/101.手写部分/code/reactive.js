@@ -1,24 +1,43 @@
 const { track, trigger, ITERATE_KEY } = require('./effect');
 
-// 数组原生includes方法
-const rawIncludes = Array.prototype.includes;
-// 重写includes方法
-function includes(...args) {
-    // 先从代理数据上使用includes反复噶
-    let res = rawIncludes.apply(this, args);
-
-    // 如果代理数据中没有找到该方法，则在原始数据中再查找
-    if (!res) {
-        res = rawIncludes.apply(this[raw], args);
-    }
-
-    return res;
-}
+// 停止收集依赖开关
+let stopTrack = false;
 
 // 数组方法重写
-const arrayPrototypeMounteds = {
-    includes
-};
+const arrayPrototypeMounteds = {};
+
+// 重写查找方法
+['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
+    // 数组原生方法
+    const originMethod = Array.prototype[key];
+    arrayPrototypeMounteds[key] = function (...args) {
+        // 先从代理数据上使用方法
+        let res = originMethod.apply(this, args);
+
+        // 如果代理数据中没有找到该方法，则在原始数据中再查找
+        if (res === false || res === -1) {
+            res = originMethod.apply(this[raw], args);
+        }
+
+        return res;
+    };
+});
+
+// 重写栈方法
+['push', 'pop', 'shift', 'unshift'].forEach(key => {
+    // 数组原生方法
+    const originMethod = Array.prototype[key];
+    arrayPrototypeMounteds[key] = function (...args) {
+        stopTrack = true;
+
+        // 使用原声方法
+        let res = originMethod.apply(this, args);
+
+        stopTrack = false;
+
+        return res;
+    };
+});
 
 // 响应式数据
 const raw = Symbol('raw');
@@ -43,7 +62,9 @@ function createReactive(
 
             // 只读数据、forEach、Symbol.iterator属性不需要收集副作用
             if (!options.readonly && key !== 'forEach' && key !== Symbol.iterator) {
-                track(target, key);
+                if (!stopTrack) {
+                    track(target, key);
+                }
             }
 
             const res = Reflect.get(target, key, receiver);
