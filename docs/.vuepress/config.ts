@@ -51,8 +51,8 @@ export default defineUserConfig({
         link: "/网络/README.md",
       },
       {
-        text: "面试题",
-        link: "/面试题/README.md",
+        text: "Q&A",
+        link: "/Q&A/README.md",
       },
     ],
 
@@ -161,7 +161,7 @@ export default defineUserConfig({
         },
       ],
       "/网络/": "structure",
-      "/面试题/": "structure",
+      "/Q&A/": "structure",
     },
   }),
 });
