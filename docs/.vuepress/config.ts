@@ -51,6 +51,10 @@ export default defineUserConfig({
         link: "/网络/README.md",
       },
       {
+        text: "webGL",
+        link: "/webGL/README.md",
+      },
+      {
         text: "Q&A",
         link: "/Q&A/README.md",
       },
@@ -58,6 +62,7 @@ export default defineUserConfig({
 
     sidebar: {
       "/JS/": "structure",
+      "/webGL/": "structure",
       "/TS/": "structure",
       "/webpack/": "structure",
       "/vite/": ["", "1.项目构建", "2.css工程化", "3.接入ESLint"],
