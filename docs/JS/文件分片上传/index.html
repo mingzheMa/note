@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="file" id="fileInput">
+    <script type="module">
+        import { md5FromArrayBuffer } from './md5.js';
+
+        const fileInput = document.getElementById('fileInput');
+
+
+        fileInput.addEventListener('change', (e) => {
+            // 获取文件对象
+            const file = e.target.files[0];
+
+            // 分片设置
+            const chunkSize = 1024 * 1024 * 5; // 5MB
+            const chunks = [];
+            const chunkNumber = Math.ceil(file.size / chunkSize);
+            // 读取文件
+            const fileReader = new FileReader();
+            fileReader.readAsArrayBuffer(file);
+            fileReader.onload = (e) => {
+                const arrayBuffer = e.target.result;
+
+                for (let i = 0; i < chunkNumber; i++) {
+                    const chunk = arrayBuffer.slice(i * chunkSize, (i + 1) * chunkSize);
+                    chunks.push({
+                        chunk,
+                        index: i
+                    });
+                }
+                // console.time('md5');
+                // const result = chunks.map(item => {
+                //     const sign = md5FromArrayBuffer(item.chunk);
+                //     return {
+                //         chunk: item.chunk,
+                //         index: item.index,
+                //         sign
+                //     };
+                // });
+                // console.timeEnd('md5');
+                // console.log(result);
+
+
+                const fileWorker = new Worker('./file-worker.js', { type: 'module' });
+                fileWorker.postMessage(chunks);
+                fileWorker.onmessage = (e) => {
+                    console.log(e.data);
+                };
+            };
+        });
+    </script>
+</body>
+
+</html>
